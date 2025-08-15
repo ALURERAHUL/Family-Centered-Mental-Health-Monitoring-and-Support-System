@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { Calendar } from '@/components/ui/calendar';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { User, Sparkles, Loader2, Plus, Info } from 'lucide-react';
 import { useAppContext } from '@/contexts/app-context';
