@@ -8,6 +8,8 @@ import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import type { MoodEntry, FamilyMember, ForumPost, CalendarEvent } from '@/lib/data';
+
 
 const allChallenges = [
     {
@@ -16,7 +18,7 @@ const allChallenges = [
         description: 'Log your mood every day for a week.',
         goal: 7,
         icon: Star,
-        getProgress: (moodEntries: any[], familyMembers: any[]) => {
+        getProgress: (moodEntries: MoodEntry[], familyMembers: FamilyMember[]) => {
             const oneWeekAgo = new Date();
             oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
             const userMoods = moodEntries.filter(e => e.memberId === '1' && new Date(e.date) >= oneWeekAgo);
@@ -30,7 +32,7 @@ const allChallenges = [
         description: 'Post a new message in the family forum.',
         goal: 1,
         icon: Trophy,
-        getProgress: (moodEntries: any[], familyMembers: any[], forumPosts: any[]) => {
+        getProgress: (moodEntries: MoodEntry[], familyMembers: FamilyMember[], forumPosts: ForumPost[]) => {
             return forumPosts.some(p => p.memberId === '1') ? 1 : 0;
         }
     },
@@ -40,7 +42,9 @@ const allChallenges = [
         description: 'Leave a supportive comment on a family member\'s post.',
         goal: 1,
         icon: Star,
-        getProgress: (moodEntries: any[], familyMembers: any[], forumPosts: any[]) => {
+        getProgress: (moodEntries: MoodEntry[], familyMembers: FamilyMember[], forumPosts: ForumPost[]) => {
+            // This logic is a bit simplistic, assumes more than one post is a comment.
+            // A more robust system would track replies.
             return forumPosts.filter(p => p.memberId === '1').length > 1 ? 1 : 0;
         }
     },
@@ -50,7 +54,7 @@ const allChallenges = [
         description: 'Add at least one event to the family calendar for the upcoming week.',
         goal: 1,
         icon: Trophy,
-        getProgress: (moodEntries: any[], familyMembers: any[], forumPosts: any[], calendarEvents: any[]) => {
+        getProgress: (moodEntries: MoodEntry[], familyMembers: FamilyMember[], forumPosts: ForumPost[], calendarEvents: CalendarEvent[]) => {
             const today = new Date();
             const nextWeek = new Date();
             nextWeek.setDate(today.getDate() + 7);
@@ -62,17 +66,14 @@ const allChallenges = [
 export default function ChallengesPage() {
     const { isSimplified, moodEntries, familyMembers, forumPosts, calendarEvents } = useAppContext();
 
-    const activeChallenges = allChallenges.map(c => {
-        const progress = c.getProg ress(moodEntries, familyMembers, forumPosts, calendarEvents);
-        const isCompleted = progress >= c.goal;
-        return { ...c, progress, isCompleted };
-    }).filter(c => !c.isCompleted);
-
-    const completedChallenges = allChallenges.map(c => {
+    const challengesWithProgress = allChallenges.map(c => {
         const progress = c.getProgress(moodEntries, familyMembers, forumPosts, calendarEvents);
         const isCompleted = progress >= c.goal;
         return { ...c, progress, isCompleted };
-    }).filter(c => c.isCompleted);
+    });
+
+    const activeChallenges = challengesWithProgress.filter(c => !c.isCompleted);
+    const completedChallenges = challengesWithProgress.filter(c => c.isCompleted);
 
     return (
         <div className="space-y-8">
