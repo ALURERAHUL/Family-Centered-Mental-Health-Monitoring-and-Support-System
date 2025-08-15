@@ -1,4 +1,5 @@
 import { DashboardGreeting } from "@/components/dashboard/dashboard-greeting";
+import { MemoryLane } from "@/components/dashboard/memory-lane";
 import { QuickAccess } from "@/components/dashboard/quick-access";
 import { RecentActivity } from "@/components/dashboard/recent-activity";
 import { UpcomingEvents } from "@/components/dashboard/upcoming-events";
@@ -8,6 +9,7 @@ export default function DashboardPage() {
   return (
     <div className="space-y-8">
       <DashboardGreeting />
+      <MemoryLane />
       <QuickAccess />
       <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
         <div className="lg:col-span-2">

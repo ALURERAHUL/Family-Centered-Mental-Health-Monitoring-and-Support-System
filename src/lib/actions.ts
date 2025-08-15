@@ -3,6 +3,7 @@
 import { analyzeFamilyPatterns, AnalyzeFamilyPatternsInput } from '@/ai/flows/analyze-family-patterns';
 import { analyzePhotoMood, AnalyzePhotoMoodInput, AnalyzePhotoMoodOutput } from '@/ai/flows/analyze-photo-mood';
 import { generateConversationStarter, GenerateConversationStarterInput } from '@/ai/flows/generate-conversation-starter';
+import { generateWellnessArticle, GenerateWellnessArticleInput, GenerateWellnessArticleOutput } from '@/ai/flows/generate-wellness-article';
 import { type MoodEntry, type CalendarEvent, type FamilyMember, type ForumPost } from './data';
 
 export async function getFamilyPatternAnalysis(memberId: string, familyMembers: FamilyMember[], moodEntries: MoodEntry[], calendarEvents: CalendarEvent[]) {
@@ -92,5 +93,16 @@ export async function getConversationStarter(familyMembers: FamilyMember[], post
     } catch (error) {
         console.error("Error generating conversation starter:", error);
         return { error: 'Failed to generate a suggestion. Please try again.' };
+    }
+}
+
+export async function getWellnessArticle(topic: string): Promise<{error: string} | GenerateWellnessArticleOutput> {
+    try {
+        const input: GenerateWellnessArticleInput = { topic };
+        const result = await generateWellnessArticle(input);
+        return result;
+    } catch (error) {
+        console.error("Error generating wellness article:", error);
+        return { error: 'Failed to generate article. Please try again.' };
     }
 }

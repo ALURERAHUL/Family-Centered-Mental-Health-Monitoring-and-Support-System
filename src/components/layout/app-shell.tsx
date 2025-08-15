@@ -23,6 +23,8 @@ import {
   Settings,
   HeartPulse,
   Users,
+  BookOpen,
+  Trophy,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAppContext } from '@/contexts/app-context';
@@ -34,6 +36,8 @@ const navItems = [
   { href: '/forum', label: 'Forum', icon: MessageSquare },
   { href: '/members', label: 'Members', icon: Users },
   { href: '/analysis', label: 'Analysis', icon: Sparkles },
+  { href: '/challenges', label: 'Challenges', icon: Trophy },
+  { href: '/resources', label: 'Resources', icon: BookOpen },
   { href: '/settings', label: 'Settings', icon: Settings },
 ];
 
