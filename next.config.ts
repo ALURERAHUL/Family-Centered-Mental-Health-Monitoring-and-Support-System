@@ -1,5 +1,4 @@
 import {withGenkit} from '@genkit-ai/next';
-import type {Config} from 'tailwindcss';
 
 const nextConfig = {
   typescript: {

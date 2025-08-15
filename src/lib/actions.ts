@@ -10,6 +10,7 @@ import { generateGuidedMeditationScript, GenerateGuidedMeditationInput } from '@
 import { generateAudioFromScript } from '@/ai/flows/generate-audio-from-script';
 import { analyzeCommunicationPatterns, AnalyzeCommunicationPatternsInput, AnalyzeCommunicationPatternsOutput } from '@/ai/flows/analyze-communication-patterns';
 import { type MoodEntry, type CalendarEvent, type FamilyMember, type ForumPost } from './data';
+import { findNearbyServices, getUserLocation } from '@/ai/tools/emergency-services-tool';
 
 export async function getFamilyPatternAnalysis(memberId: string, familyMembers: FamilyMember[], moodEntries: MoodEntry[], calendarEvents: CalendarEvent[]) {
     try {
@@ -195,4 +196,3 @@ export async function getCommunicationPatternAnalysis(
       return { error: 'Failed to analyze communication patterns. Please try again later.' };
     }
   }
-  
