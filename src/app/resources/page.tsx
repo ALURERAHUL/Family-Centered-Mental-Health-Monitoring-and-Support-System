@@ -1,3 +1,4 @@
+
 'use client';
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -60,7 +61,7 @@ export default function ResourcesPage() {
                             {articleTopics.map(topic => (
                                 <Button 
                                     key={topic} 
-                                    variant={activeTopic === topic && !article ? 'default' : 'outline'}
+                                    variant={activeTopic === topic ? 'default' : 'outline'}
                                     onClick={() => handleGenerateArticle(topic)}
                                     disabled={isLoading}
                                     className={cn(isSimplified && 'h-12 text-lg')}
