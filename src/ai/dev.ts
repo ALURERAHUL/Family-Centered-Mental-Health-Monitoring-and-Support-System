@@ -9,3 +9,4 @@ import '@/ai/flows/generate-wellness-article.ts';
 import '@/ai/flows/generate-wellness-coach-response.ts';
 import '@/ai/flows/generate-calendar-suggestion.ts';
 import '@/ai/flows/generate-guided-meditation.ts';
+import '@/ai/tools/emergency-services-tool.ts';

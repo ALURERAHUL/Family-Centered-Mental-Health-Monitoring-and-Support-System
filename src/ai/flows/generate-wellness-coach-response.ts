@@ -10,6 +10,7 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import { findNearbyServices, getUserLocation } from '../tools/emergency-services-tool';
 
 const ChatMessageSchema = z.object({
     role: z.enum(['user', 'model']),
@@ -35,9 +36,12 @@ const prompt = ai.definePrompt({
   name: 'generateWellnessCoachResponsePrompt',
   input: {schema: GenerateWellnessCoachResponseInputSchema},
   output: {schema: GenerateWellnessCoachResponseOutputSchema},
-  prompt: `You are an AI Family Wellness Coach. Your tone is empathetic, supportive, and knowledgeable. You provide practical, actionable advice based on psychology principles. You are not a therapist and should not provide medical advice, but you can offer guidance and support.
+  tools: [findNearbyServices, getUserLocation],
+  prompt: `You are an AI Family Wellness Coach. Your tone is empathetic, supportive, and knowledgeable. You provide practical, actionable advice based on psychology principles. 
 
-Keep your responses concise and easy to understand. Use markdown for formatting if needed.
+IMPORTANT: You are an AI assistant, not a medical professional. If the user expresses thoughts of self-harm, being unsafe, or being seriously unwell, you MUST prioritize providing them with emergency contact information. Use your tools to find local help. Always include the following disclaimer in such cases: "I am an AI assistant and not a substitute for professional medical advice. If this is an emergency, please contact your local emergency services immediately."
+
+Keep your regular responses concise and easy to understand. Use markdown for formatting if needed.
 
 Here is some context about the family you are talking to:
 {{{familyContext}}}
