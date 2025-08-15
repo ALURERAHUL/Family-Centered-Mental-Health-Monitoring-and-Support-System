@@ -1,7 +1,5 @@
-import type {NextConfig} from 'next';
-
-const nextConfig: NextConfig = {
-  /* config options here */
+/** @type {import('next').NextConfig} */
+const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
@@ -17,6 +15,13 @@ const nextConfig: NextConfig = {
         pathname: '/**',
       },
     ],
+  },
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '2mb',
+      // Allow more time for AI operations to complete
+      responseTerminationTimeout: 120,
+    },
   },
 };
 
