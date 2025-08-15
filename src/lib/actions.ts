@@ -2,7 +2,8 @@
 
 import { analyzeFamilyPatterns, AnalyzeFamilyPatternsInput } from '@/ai/flows/analyze-family-patterns';
 import { analyzePhotoMood, AnalyzePhotoMoodInput, AnalyzePhotoMoodOutput } from '@/ai/flows/analyze-photo-mood';
-import { type MoodEntry, type CalendarEvent, type FamilyMember } from './data';
+import { generateConversationStarter, GenerateConversationStarterInput } from '@/ai/flows/generate-conversation-starter';
+import { type MoodEntry, type CalendarEvent, type FamilyMember, type ForumPost } from './data';
 
 export async function getFamilyPatternAnalysis(memberId: string, familyMembers: FamilyMember[], moodEntries: MoodEntry[], calendarEvents: CalendarEvent[]) {
     try {
@@ -54,5 +55,28 @@ export async function getPhotoMoodAnalysis(photoDataUri: string): Promise<{error
     } catch (error) {
         console.error("Error analyzing photo mood:", error);
         return { error: 'Failed to analyze photo. Please try again.' };
+    }
+}
+
+export async function getConversationStarter(familyMembers: FamilyMember[], posts: ForumPost[]) {
+    try {
+        const memberNames = familyMembers.map(m => m.name).join(', ');
+        const recentPosts = posts.slice(-3).map(p => {
+            const member = familyMembers.find(m => m.id === p.memberId);
+            return `${member?.name || 'A family member'} said: "${p.content}"`;
+        }).join('\n');
+
+        const context = `The family members are: ${memberNames}.\nRecent posts:\n${recentPosts}`;
+
+        const input: GenerateConversationStarterInput = {
+            familyContext: context,
+        };
+
+        const result = await generateConversationStarter(input);
+        return { suggestion: result.suggestion };
+
+    } catch (error) {
+        console.error("Error generating conversation starter:", error);
+        return { error: 'Failed to generate a suggestion. Please try again.' };
     }
 }

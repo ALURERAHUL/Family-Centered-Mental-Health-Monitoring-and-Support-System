@@ -7,11 +7,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { forumPosts, ForumPost, Mood } from '@/lib/data';
-import { User, Send, Frown, Annoyed, Smile, Meh, HeartPulse, MessageSquare, Star } from 'lucide-react';
+import { User, Send, Frown, Annoyed, Smile, Meh, HeartPulse, Sparkles, Loader2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { useAppContext } from '@/contexts/app-context';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
+import { getConversationStarter } from '@/lib/actions';
+import { useToast } from '@/hooks/use-toast';
 
 const moodIcons: Record<Mood, React.ElementType> = {
     happy: Smile,
@@ -26,8 +28,10 @@ const moodIcons: Record<Mood, React.ElementType> = {
 export default function ForumPage() {
     const [posts, setPosts] = useState<ForumPost[]>(forumPosts);
     const [newMessage, setNewMessage] = useState('');
+    const [isSuggesting, setIsSuggesting] = useState(false);
     const { isSimplified, familyMembers, moodEntries } = useAppContext();
     const scrollAreaRef = useRef<HTMLDivElement>(null);
+    const { toast } = useToast();
 
     const getMember = (id: string) => familyMembers.find(m => m.id === id);
     
@@ -47,6 +51,21 @@ export default function ForumPage() {
         };
         setPosts([...posts, newPost]);
         setNewMessage('');
+    };
+
+    const handleSuggestMessage = async () => {
+        setIsSuggesting(true);
+        const result = await getConversationStarter(familyMembers, posts);
+        if (result.error) {
+            toast({
+                title: 'Error',
+                description: result.error,
+                variant: 'destructive',
+            });
+        } else if (result.suggestion) {
+            setNewMessage(result.suggestion);
+        }
+        setIsSuggesting(false);
     };
 
     useEffect(() => {
@@ -105,6 +124,14 @@ export default function ForumPage() {
                         onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
                         className={cn(isSimplified && 'h-12 text-lg')}
                     />
+                     <Button onClick={handleSuggestMessage} variant="outline" disabled={isSuggesting} className={cn(isSimplified && 'h-12 text-lg')}>
+                        {isSuggesting ? (
+                            <Loader2 className={cn('h-4 w-4 animate-spin', isSimplified && 'h-5 w-5')} />
+                        ) : (
+                            <Sparkles className={cn('h-4 w-4', isSimplified && 'h-5 w-5')} />
+                        )}
+                        <span className="sr-only sm:not-sr-only sm:ml-2">Suggest</span>
+                    </Button>
                     <Button onClick={handleSendMessage} className={cn(isSimplified && 'h-12 text-lg')}>
                         <Send className={cn('h-4 w-4 mr-2', isSimplified && 'h-5 w-5')} />
                         Send
