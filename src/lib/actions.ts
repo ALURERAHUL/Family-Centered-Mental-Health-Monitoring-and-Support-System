@@ -7,35 +7,39 @@ import { type MoodEntry, type CalendarEvent, type FamilyMember, type ForumPost }
 
 export async function getFamilyPatternAnalysis(memberId: string, familyMembers: FamilyMember[], moodEntries: MoodEntry[], calendarEvents: CalendarEvent[]) {
     try {
-        let finalMoodEntries = moodEntries;
-        let finalCalendarEvents = calendarEvents;
+        const memberToAnalyze = memberId === 'all' 
+            ? 'the entire family' 
+            : familyMembers.find(m => m.id === memberId)?.name;
 
-        if (memberId !== 'all') {
-            finalMoodEntries = moodEntries.filter(entry => entry.memberId === memberId);
-            finalCalendarEvents = calendarEvents.filter(event => event.memberIds.includes(memberId));
+        if (!memberToAnalyze) {
+            return { error: 'Selected member not found.' };
         }
-        
-        const memberName = memberId === 'all' ? 'the entire family' : familyMembers.find(m => m.id === memberId)?.name;
 
-        const transformedMoodEntries = finalMoodEntries.map(entry => ({
+        const relevantMoodEntries = (memberId === 'all'
+            ? moodEntries
+            : moodEntries.filter(entry => entry.memberId === memberId)
+        ).map(entry => ({
             memberId: entry.memberId,
             date: entry.date,
             mood: entry.mood,
             notes: entry.notes || '',
         }));
 
-        const transformedCalendarEvents = finalCalendarEvents.flatMap(event => 
-            event.memberIds.map(memberId => ({
-                memberId: memberId,
+        const relevantCalendarEvents = (memberId === 'all'
+            ? calendarEvents
+            : calendarEvents.filter(event => event.memberIds.includes(memberId))
+        ).flatMap(event => 
+            event.memberIds.map(mId => ({
+                memberId: mId,
                 date: event.date,
                 event: event.title,
             }))
         );
 
         const input: AnalyzeFamilyPatternsInput = {
-            memberToAnalyze: memberName || 'the user',
-            moodEntries: transformedMoodEntries,
-            calendarEvents: transformedCalendarEvents,
+            memberToAnalyze: memberToAnalyze,
+            moodEntries: relevantMoodEntries,
+            calendarEvents: relevantCalendarEvents,
         };
 
         const result = await analyzeFamilyPatterns(input);
@@ -58,15 +62,25 @@ export async function getPhotoMoodAnalysis(photoDataUri: string): Promise<{error
     }
 }
 
-export async function getConversationStarter(familyMembers: FamilyMember[], posts: ForumPost[]) {
+export async function getConversationStarter(familyMembers: FamilyMember[], posts: ForumPost[], moodEntries: MoodEntry[]) {
     try {
-        const memberNames = familyMembers.map(m => m.name).join(', ');
+        const getLatestMood = (memberId: string) => {
+            return moodEntries
+                .filter(entry => entry.memberId === memberId)
+                .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
+        };
+
+        const contextSummary = familyMembers.map(member => {
+            const latestMood = getLatestMood(member.id);
+            return `${member.name} is currently feeling ${latestMood ? latestMood.mood : 'unknown'}.`;
+        }).join(' ');
+
         const recentPosts = posts.slice(-3).map(p => {
             const member = familyMembers.find(m => m.id === p.memberId);
             return `${member?.name || 'A family member'} said: "${p.content}"`;
         }).join('\n');
 
-        const context = `The family members are: ${memberNames}.\nRecent posts:\n${recentPosts}`;
+        const context = `Here's a summary of the family's current mood: ${contextSummary}\n\nRecent posts:\n${recentPosts}`;
 
         const input: GenerateConversationStarterInput = {
             familyContext: context,

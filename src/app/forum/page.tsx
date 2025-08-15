@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { forumPosts, ForumPost, Mood } from '@/lib/data';
+import { ForumPost, Mood } from '@/lib/data';
 import { User, Send, Frown, Annoyed, Smile, Meh, HeartPulse, Sparkles, Loader2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { useAppContext } from '@/contexts/app-context';
@@ -26,10 +26,9 @@ const moodIcons: Record<Mood, React.ElementType> = {
 };
 
 export default function ForumPage() {
-    const [posts, setPosts] = useState<ForumPost[]>(forumPosts);
+    const { isSimplified, familyMembers, moodEntries, forumPosts, setForumPosts } = useAppContext();
     const [newMessage, setNewMessage] = useState('');
     const [isSuggesting, setIsSuggesting] = useState(false);
-    const { isSimplified, familyMembers, moodEntries } = useAppContext();
     const scrollAreaRef = useRef<HTMLDivElement>(null);
     const { toast } = useToast();
 
@@ -43,19 +42,19 @@ export default function ForumPage() {
 
     const handleSendMessage = () => {
         if (newMessage.trim() === '') return;
-        const newPost = {
-            id: `p${posts.length + 1}`,
+        const newPost: ForumPost = {
+            id: `p${forumPosts.length + 1}`,
             memberId: '1', // Assume the current user is 'You'
             content: newMessage,
             timestamp: new Date().toISOString(),
         };
-        setPosts([...posts, newPost]);
+        setForumPosts(prevPosts => [...prevPosts, newPost]);
         setNewMessage('');
     };
 
     const handleSuggestMessage = async () => {
         setIsSuggesting(true);
-        const result = await getConversationStarter(familyMembers, posts);
+        const result = await getConversationStarter(familyMembers, forumPosts, moodEntries);
         if (result.error) {
             toast({
                 title: 'Error',
@@ -75,7 +74,7 @@ export default function ForumPage() {
                 behavior: 'smooth',
             });
         }
-    }, [posts]);
+    }, [forumPosts]);
 
     return (
         <Card className="h-[calc(100vh-12rem)] flex flex-col">
@@ -85,7 +84,7 @@ export default function ForumPage() {
             <CardContent className="flex-1 p-0 overflow-hidden">
                 <ScrollArea className="h-full px-6" ref={scrollAreaRef}>
                     <div className="space-y-6">
-                        {posts.map(post => {
+                        {forumPosts.map(post => {
                             const member = getMember(post.memberId);
                             const latestMood = getLatestMood(post.memberId);
                             const MoodIcon = latestMood ? moodIcons[latestMood.mood] : null;
