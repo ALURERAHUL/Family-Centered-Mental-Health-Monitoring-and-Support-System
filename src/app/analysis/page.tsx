@@ -2,8 +2,8 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, Sparkles, User, Camera, Upload, History } from 'lucide-react';
-import { getFamilyPatternAnalysis, getPhotoMoodAnalysis } from '@/lib/actions';
+import { Loader2, Sparkles, User, Camera, Upload, History, MessageCircle } from 'lucide-react';
+import { getFamilyPatternAnalysis, getPhotoMoodAnalysis, getCommunicationPatternAnalysis } from '@/lib/actions';
 import { useAppContext } from '@/contexts/app-context';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
@@ -34,12 +34,15 @@ export default function AnalysisPage() {
     const [selectedPhotoMemberId, setSelectedPhotoMemberId] = useState<string>('1');
     const [selectedHistoryMemberId, setSelectedHistoryMemberId] = useState<string>('all');
 
+    const [commAnalysis, setCommAnalysis] = useState<string | null>(null);
+    const [isCommLoading, setIsCommLoading] = useState(false);
+    const [commError, setCommError] = useState<string | null>(null);
 
     const videoRef = useRef<HTMLVideoElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const { isSimplified, familyMembers, moodEntries, calendarEvents } = useAppContext();
+    const { isSimplified, familyMembers, moodEntries, calendarEvents, forumPosts } = useAppContext();
     const { toast } = useToast();
 
     useEffect(() => {
@@ -79,6 +82,19 @@ export default function AnalysisPage() {
             setAnalysis(result.summary);
         }
         setIsLoading(false);
+    };
+
+    const handleAnalyzeCommunication = async () => {
+        setIsCommLoading(true);
+        setCommError(null);
+        setCommAnalysis(null);
+        const result = await getCommunicationPatternAnalysis(familyMembers, forumPosts);
+        if (result.error) {
+            setCommError(result.error);
+        } else if (result.analysisSummary) {
+            setCommAnalysis(result.analysisSummary);
+        }
+        setIsCommLoading(false);
     };
     
     const analyzePhoto = async (photoDataUri: string) => {
@@ -226,7 +242,7 @@ export default function AnalysisPage() {
                             <CardHeader>
                                 <CardTitle className={cn("flex items-center gap-2", isSimplified && 'text-2xl')}>
                                     <Sparkles className="h-5 w-5 text-primary" />
-                                    Analysis Summary
+                                    Mood & Event Analysis
                                 </CardTitle>
                             </CardHeader>
                             <CardContent>
@@ -247,6 +263,48 @@ export default function AnalysisPage() {
                              />
                              <p className={cn("mt-4", isSimplified && 'text-lg')}>Select a member and click the button to generate a wellness report.</p>
                          </div>
+                    )}
+                </CardContent>
+            </Card>
+
+            <Card>
+                <CardHeader>
+                    <div className="mx-auto bg-primary/10 p-4 rounded-full w-fit">
+                        <MessageCircle className="h-10 w-10 text-primary" />
+                    </div>
+                    <CardTitle className={cn("text-3xl font-bold mt-4 text-center", isSimplified && 'text-4xl')}>Communication Pattern Analysis</CardTitle>
+                    <CardDescription className={cn("text-lg text-muted-foreground text-center", isSimplified && 'text-xl')}>
+                        Analyze your family's forum conversations for patterns and insights.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                    <div className="flex justify-center">
+                        <Button onClick={handleAnalyzeCommunication} disabled={isCommLoading} size="lg" className={cn(isSimplified && 'h-14 text-lg')}>
+                            {isCommLoading ? (
+                                <>
+                                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                                    Analyzing Forum...
+                                </>
+                            ) : (
+                                'Analyze Communication'
+                            )}
+                        </Button>
+                    </div>
+
+                    {commError && <p className="text-destructive text-center">{commError}</p>}
+                    
+                    {commAnalysis && (
+                        <Card className="text-left bg-background">
+                            <CardHeader>
+                                <CardTitle className={cn("flex items-center gap-2", isSimplified && 'text-2xl')}>
+                                    <MessageCircle className="h-5 w-5 text-primary" />
+                                    Communication Summary
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <p className={cn("whitespace-pre-wrap", isSimplified && 'text-lg')}>{commAnalysis}</p>
+                            </CardContent>
+                        </Card>
                     )}
                 </CardContent>
             </Card>

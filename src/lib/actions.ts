@@ -7,6 +7,7 @@ import { generateWellnessArticle, GenerateWellnessArticleInput, GenerateWellness
 import { generateWellnessCoachResponse, GenerateWellnessCoachResponseInput, GenerateWellnessCoachResponseOutput } from '@/ai/flows/generate-wellness-coach-response';
 import { generateCalendarSuggestion, GenerateCalendarSuggestionInput, GenerateCalendarSuggestionOutput } from '@/ai/flows/generate-calendar-suggestion';
 import { generateGuidedMeditation, GenerateGuidedMeditationInput, GenerateGuidedMeditationOutput } from '@/ai/flows/generate-guided-meditation';
+import { analyzeCommunicationPatterns, AnalyzeCommunicationPatternsInput, AnalyzeCommunicationPatternsOutput } from '@/ai/flows/analyze-communication-patterns';
 import { type MoodEntry, type CalendarEvent, type FamilyMember, type ForumPost } from './data';
 
 export async function getFamilyPatternAnalysis(memberId: string, familyMembers: FamilyMember[], moodEntries: MoodEntry[], calendarEvents: CalendarEvent[]) {
@@ -158,3 +159,29 @@ export async function getGuidedMeditation(topic: string): Promise<{error: string
         return { error: 'Failed to generate audio. Please try again.' };
     }
 }
+
+export async function getCommunicationPatternAnalysis(
+    familyMembers: FamilyMember[],
+    forumPosts: ForumPost[]
+  ): Promise<{ error?: string; analysisSummary?: string }> {
+    try {
+      const getMemberName = (id: string) => familyMembers.find(m => m.id === id)?.name || 'Unknown Member';
+  
+      const preparedPosts = forumPosts.map(post => ({
+        memberName: getMemberName(post.memberId),
+        content: post.content,
+        timestamp: post.timestamp,
+      }));
+  
+      const input: AnalyzeCommunicationPatternsInput = {
+        forumPosts: preparedPosts,
+      };
+  
+      const result = await analyzeCommunicationPatterns(input);
+      return { analysisSummary: result.analysisSummary };
+    } catch (error) {
+      console.error('Error analyzing communication patterns:', error);
+      return { error: 'Failed to analyze communication patterns. Please try again later.' };
+    }
+  }
+  
