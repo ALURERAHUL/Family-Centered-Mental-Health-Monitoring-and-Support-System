@@ -1,5 +1,5 @@
 'use client';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, Sparkles, User, Camera, Upload } from 'lucide-react';
@@ -24,9 +24,13 @@ export default function AnalysisPage() {
     const [isPhotoLoading, setIsPhotoLoading] = useState(false);
     const [photoError, setPhotoError] = useState<string | null>(null);
     const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
+    const [dragOver, setDragOver] = useState(false);
+    const [uploadedImage, setUploadedImage] = useState<string | null>(null);
 
     const videoRef = useRef<HTMLVideoElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
     const { isSimplified } = useAppContext();
     const { toast } = useToast();
 
@@ -42,11 +46,7 @@ export default function AnalysisPage() {
           } catch (error) {
             console.error('Error accessing camera:', error);
             setHasCameraPermission(false);
-            toast({
-              variant: 'destructive',
-              title: 'Camera Access Denied',
-              description: 'Please enable camera permissions in your browser settings to use this feature.',
-            });
+            // Non-blocking, user can still upload a photo.
           }
         };
     
@@ -58,7 +58,7 @@ export default function AnalysisPage() {
                 stream.getTracks().forEach(track => track.stop());
             }
         }
-      }, [toast]);
+      }, []);
 
     const handleAnalyze = async () => {
         setIsLoading(true);
@@ -72,13 +72,25 @@ export default function AnalysisPage() {
         }
         setIsLoading(false);
     };
-
-    const handleTakePhotoAndAnalyze = async () => {
-        if (!videoRef.current || !canvasRef.current) return;
+    
+    const analyzePhoto = async (photoDataUri: string) => {
         setIsPhotoLoading(true);
         setPhotoError(null);
         setPhotoAnalysis(null);
 
+        const result = await getPhotoMoodAnalysis(photoDataUri);
+
+        if (result.error) {
+            setPhotoError(result.error);
+        } else {
+            setPhotoAnalysis(result);
+        }
+        setIsPhotoLoading(false);
+    }
+
+    const handleTakePhotoAndAnalyze = async () => {
+        if (!videoRef.current || !canvasRef.current) return;
+        
         const video = videoRef.current;
         const canvas = canvasRef.current;
         canvas.width = video.videoWidth;
@@ -87,15 +99,51 @@ export default function AnalysisPage() {
         if (context) {
             context.drawImage(video, 0, 0, canvas.width, canvas.height);
             const photoDataUri = canvas.toDataURL('image/jpeg');
-            const result = await getPhotoMoodAnalysis(photoDataUri);
-
-            if (result.error) {
-                setPhotoError(result.error);
-            } else {
-                setPhotoAnalysis(result);
-            }
+            setUploadedImage(photoDataUri); // Show the captured photo
+            await analyzePhoto(photoDataUri);
         }
-        setIsPhotoLoading(false);
+    };
+    
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            processFile(file);
+        }
+    };
+
+    const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setDragOver(false);
+        const file = e.dataTransfer.files?.[0];
+        if (file) {
+            processFile(file);
+        }
+    }, []);
+
+    const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setDragOver(true);
+    }, []);
+    
+    const handleDragLeave = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setDragOver(false);
+    }, []);
+
+
+    const processFile = (file: File) => {
+        const reader = new FileReader();
+        reader.onload = async (loadEvent) => {
+            const photoDataUri = loadEvent.target?.result as string;
+            if(photoDataUri){
+                setUploadedImage(photoDataUri); // Show the uploaded photo
+                await analyzePhoto(photoDataUri);
+            }
+        };
+        reader.readAsDataURL(file);
     };
 
     return (
@@ -194,35 +242,58 @@ export default function AnalysisPage() {
                     </div>
                     <CardTitle className={cn("text-3xl font-bold mt-4 text-center", isSimplified && 'text-4xl')}>Photo Mood Analysis</CardTitle>
                     <CardDescription className={cn("text-lg text-muted-foreground text-center", isSimplified && 'text-xl')}>
-                        Take a photo to get an instant mood analysis and supportive suggestions.
+                        Take or upload a photo to get an instant mood analysis and supportive suggestions.
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                    <div className="border rounded-lg p-4 bg-muted/50">
-                        <video ref={videoRef} className="w-full aspect-video rounded-md" autoPlay muted playsInline/>
-                        <canvas ref={canvasRef} className="hidden" />
-                        {hasCameraPermission === false && (
-                            <Alert variant="destructive">
-                                <AlertTitle>Camera Access Required</AlertTitle>
-                                <AlertDescription>
-                                Please allow camera access to use this feature. You may need to grant permissions in your browser settings.
-                                </AlertDescription>
-                            </Alert>
-                        )}
-                    </div>
-                    <Button onClick={handleTakePhotoAndAnalyze} disabled={isPhotoLoading || hasCameraPermission !== true} size="lg" className={cn("w-full", isSimplified && 'h-14 text-lg')}>
-                        {isPhotoLoading ? (
-                            <>
-                                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                                Analyzing Photo...
-                            </>
-                        ) : (
-                            <>
+                    <div className="grid md:grid-cols-2 gap-6 items-start">
+                        <div className="space-y-4">
+                            <CardTitle className="text-xl text-center">Option 1: Use Camera</CardTitle>
+                            <div className="border rounded-lg p-4 bg-muted/50">
+                                <video ref={videoRef} className="w-full aspect-video rounded-md" autoPlay muted playsInline/>
+                                <canvas ref={canvasRef} className="hidden" />
+                                {hasCameraPermission === false && (
+                                    <Alert variant="destructive" className="mt-4">
+                                        <AlertTitle>Camera Access Denied</AlertTitle>
+                                        <AlertDescription>
+                                        Please allow camera access in your browser to use this feature.
+                                        </AlertDescription>
+                                    </Alert>
+                                )}
+                            </div>
+                            <Button onClick={handleTakePhotoAndAnalyze} disabled={isPhotoLoading || hasCameraPermission !== true} size="lg" className={cn("w-full", isSimplified && 'h-14 text-lg')}>
                                 <Camera className="mr-2 h-5 w-5" />
-                                Analyze Photo
-                            </>
-                        )}
-                    </Button>
+                                Take Photo & Analyze
+                            </Button>
+                        </div>
+                         <div className="space-y-4">
+                            <CardTitle className="text-xl text-center">Option 2: Upload Photo</CardTitle>
+                             <div 
+                                className={cn("border-2 border-dashed rounded-lg p-4 bg-muted/50 aspect-video flex flex-col justify-center items-center text-center cursor-pointer", isSimplified && 'py-10', dragOver && "border-primary bg-primary/10")}
+                                onDrop={handleDrop}
+                                onDragOver={handleDragOver}
+                                onDragLeave={handleDragLeave}
+                                onClick={() => fileInputRef.current?.click()}
+                            >
+                                <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" className="hidden" />
+                                {uploadedImage ? (
+                                    <Image src={uploadedImage} alt="Uploaded preview" width={200} height={150} className="max-h-full w-auto rounded-md" />
+                                ) : (
+                                    <div className='space-y-2'>
+                                        <Upload className="h-10 w-10 mx-auto text-muted-foreground" />
+                                        <p className="text-muted-foreground">Drag & drop an image here, or click to select one</p>
+                                    </div>
+                                )}
+                            </div>
+                         </div>
+                    </div>
+
+                    {isPhotoLoading && (
+                        <div className="flex justify-center items-center gap-2 text-primary">
+                            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                            <p>Analyzing Photo...</p>
+                        </div>
+                    )}
                     
                     {photoError && <p className="text-destructive text-center">{photoError}</p>}
 
@@ -236,11 +307,11 @@ export default function AnalysisPage() {
                                  <div>
                                     <h3 className="font-bold text-lg">Analysis:</h3>
                                     <p className="whitespace-pre-wrap">{photoAnalysis.analysis}</p>
-                                </div>
+                                 </div>
                                  <div>
                                     <h3 className="font-bold text-lg">Suggestion:</h3>
                                     <p className="whitespace-pre-wrap">{photoAnalysis.solution}</p>
-                                </div>
+                                 </div>
                             </CardContent>
                         </Card>
                     )}
