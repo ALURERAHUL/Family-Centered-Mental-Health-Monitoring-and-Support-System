@@ -6,7 +6,8 @@ import { generateConversationStarter, GenerateConversationStarterInput } from '@
 import { generateWellnessArticle, GenerateWellnessArticleInput, GenerateWellnessArticleOutput } from '@/ai/flows/generate-wellness-article';
 import { generateWellnessCoachResponse, GenerateWellnessCoachResponseInput, GenerateWellnessCoachResponseOutput } from '@/ai/flows/generate-wellness-coach-response';
 import { generateCalendarSuggestion, GenerateCalendarSuggestionInput, GenerateCalendarSuggestionOutput } from '@/ai/flows/generate-calendar-suggestion';
-import { generateGuidedMeditation, GenerateGuidedMeditationInput, GenerateGuidedMeditationOutput } from '@/ai/flows/generate-guided-meditation';
+import { generateGuidedMeditationScript, GenerateGuidedMeditationInput } from '@/ai/flows/generate-guided-meditation';
+import { generateAudioFromScript } from '@/ai/flows/generate-audio-from-script';
 import { analyzeCommunicationPatterns, AnalyzeCommunicationPatternsInput, AnalyzeCommunicationPatternsOutput } from '@/ai/flows/analyze-communication-patterns';
 import { type MoodEntry, type CalendarEvent, type FamilyMember, type ForumPost } from './data';
 
@@ -149,13 +150,23 @@ export async function getCalendarSuggestion(
     }
 }
 
-export async function getGuidedMeditation(topic: string): Promise<{error: string} | GenerateGuidedMeditationOutput> {
+export async function getGuidedMeditationScript(topic: string): Promise<{error?: string, script?: string}> {
     try {
         const input: GenerateGuidedMeditationInput = { topic };
-        const result = await generateGuidedMeditation(input);
+        const result = await generateGuidedMeditationScript(input);
         return result;
     } catch (error) {
-        console.error("Error generating guided meditation:", error);
+        console.error("Error generating guided meditation script:", error);
+        return { error: 'Failed to generate script. Please try again.' };
+    }
+}
+
+export async function getAudioFromScript(script: string): Promise<{error?: string, audioDataUri?: string}> {
+    try {
+        const result = await generateAudioFromScript({ script });
+        return result;
+    } catch (error) {
+        console.error("Error generating audio from script:", error);
         return { error: 'Failed to generate audio. Please try again.' };
     }
 }

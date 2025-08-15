@@ -1,9 +1,9 @@
 'use client';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Loader2, Wand2, Mic } from 'lucide-react';
-import { getGuidedMeditation } from '@/lib/actions';
+import { getGuidedMeditationScript, getAudioFromScript } from '@/lib/actions';
 import { cn } from '@/lib/utils';
 import { useAppContext } from '@/contexts/app-context';
 import { Input } from '@/components/ui/input';
@@ -18,8 +18,10 @@ const meditationTopics = [
 ]
 
 export default function MeditationsPage() {
+    const [script, setScript] = useState<string | null>(null);
     const [audioDataUri, setAudioDataUri] = useState<string | null>(null);
-    const [isLoading, setIsLoading] = useState(false);
+    const [isScriptLoading, setIsScriptLoading] = useState(false);
+    const [isAudioLoading, setIsAudioLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [customTopic, setCustomTopic] = useState('');
     const [activeTopic, setActiveTopic] = useState('');
@@ -28,18 +30,39 @@ export default function MeditationsPage() {
 
     const handleGenerateMeditation = async (topic: string) => {
         if (!topic) return;
-        setIsLoading(true);
+        setIsScriptLoading(true);
+        setIsAudioLoading(false);
         setError(null);
+        setScript(null);
         setAudioDataUri(null);
         setActiveTopic(topic);
-        const result = await getGuidedMeditation(topic);
-        if (result.error) {
-            setError(result.error);
-        } else {
-            setAudioDataUri(result.audioDataUri);
+
+        const scriptResult = await getGuidedMeditationScript(topic);
+        
+        setIsScriptLoading(false);
+        if (scriptResult.error) {
+            setError(scriptResult.error);
+        } else if (scriptResult.script) {
+            setScript(scriptResult.script);
+            // Now automatically fetch the audio
+            setIsAudioLoading(true);
+            const audioResult = await getAudioFromScript(scriptResult.script);
+            if(audioResult.error) {
+                setError(audioResult.error);
+            } else {
+                setAudioDataUri(audioResult.audioDataUri);
+            }
+            setIsAudioLoading(false);
         }
-        setIsLoading(false);
     }
+
+    useEffect(() => {
+        if (audioDataUri && audioRef.current) {
+            audioRef.current.load();
+        }
+    }, [audioDataUri]);
+
+    const isLoading = isScriptLoading || isAudioLoading;
 
     return (
         <div className="space-y-8">
@@ -65,7 +88,7 @@ export default function MeditationsPage() {
                                     disabled={isLoading}
                                     className={cn(isSimplified && 'h-12 text-lg')}
                                 >
-                                     {isLoading && activeTopic === topic && (
+                                     {isScriptLoading && activeTopic === topic && (
                                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                                      )}
                                     {topic}
@@ -86,32 +109,45 @@ export default function MeditationsPage() {
                                 disabled={isLoading || !customTopic}
                                 className={cn(isSimplified && 'h-12 text-lg')}
                             >
-                                 {isLoading && activeTopic === customTopic ? (
+                                 {isScriptLoading && activeTopic === customTopic ? (
                                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                ) : (
+                                 ) : (
                                     <Wand2 className="mr-2 h-4 w-4" />
-                                )}
+                                 )}
                                 Generate
                             </Button>
                         </div>
                     </div>
                     
-                     {isLoading && (
+                     {isScriptLoading && (
                         <div className="flex flex-col items-center justify-center pt-8 space-y-2">
                             <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                            <p className="text-muted-foreground">Generating your meditation... this may take a moment.</p>
+                            <p className="text-muted-foreground">Generating your meditation script...</p>
                         </div>
                     )}
 
                     {error && <p className="text-destructive text-center pt-8">{error}</p>}
                     
-                    {audioDataUri && !isLoading && (
-                        <div className="pt-8">
-                           <h3 className="text-center font-bold text-lg mb-4">Meditation on "{activeTopic}"</h3>
-                           <audio ref={audioRef} controls src={audioDataUri} className="w-full">
-                                Your browser does not support the audio element.
-                           </audio>
-                        </div>
+                    {script && !isScriptLoading && (
+                        <Card className="mt-6 bg-background">
+                             <CardHeader>
+                                <CardTitle>Meditation on "{activeTopic}"</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                {isAudioLoading && (
+                                    <div className="flex items-center gap-2 text-muted-foreground mb-4">
+                                        <Loader2 className="h-4 w-4 animate-spin"/>
+                                        <span>Generating audio...</span>
+                                    </div>
+                                )}
+                                {audioDataUri && !isAudioLoading && (
+                                     <audio ref={audioRef} controls src={audioDataUri} className="w-full mb-4">
+                                        Your browser does not support the audio element.
+                                    </audio>
+                                )}
+                                <p className="prose prose-zinc dark:prose-invert max-w-none whitespace-pre-wrap">{script}</p>
+                            </CardContent>
+                        </Card>
                     )}
                 </CardContent>
             </Card>
