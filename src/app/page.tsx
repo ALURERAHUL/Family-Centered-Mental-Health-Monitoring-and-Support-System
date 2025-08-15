@@ -1,3 +1,4 @@
+'use client';
 import { DashboardGreeting } from "@/components/dashboard/dashboard-greeting";
 import { MemoryLane } from "@/components/dashboard/memory-lane";
 import { QuickAccess } from "@/components/dashboard/quick-access";
