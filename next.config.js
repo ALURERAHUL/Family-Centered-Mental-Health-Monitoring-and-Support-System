@@ -9,6 +9,16 @@ const nextConfig = {
     // !! WARN !!
     ignoreBuildErrors: true,
   },
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'placehold.co',
+        port: '',
+        pathname: '/**',
+      },
+    ],
+  },
   webpack: (config) => {
     // Required for wav package.
     config.externals.push('node-fetch');
