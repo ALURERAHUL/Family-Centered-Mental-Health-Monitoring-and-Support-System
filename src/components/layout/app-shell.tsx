@@ -38,7 +38,7 @@ const navItems = [
   { href: '/members', label: 'Members', icon: Users },
   { href: '/analysis', label: 'Analysis', icon: Sparkles },
   { href: '/challenges', label: 'Challenges', icon: Trophy },
-  { href: '/resources', label: 'Coach', icon: BookOpen },
+  { href: '/resources', label: 'Articles', icon: BookOpen },
   { href: '/meditations', label: 'Meditations', icon: Mic },
   { href: '/settings', label: 'Settings', icon: Settings },
 ];
