@@ -1,18 +1,23 @@
 'use client';
-import { type ReactNode, createContext, useContext, useState } from 'react';
+import type { ReactNode } from 'react';
+import { createContext, useContext, useState } from 'react';
+import { familyMembers as initialFamilyMembers, type FamilyMember } from '@/lib/data';
 
 type AppContextType = {
   isSimplified: boolean;
   setIsSimplified: (isSimplified: boolean) => void;
+  familyMembers: FamilyMember[];
+  setFamilyMembers: React.Dispatch<React.SetStateAction<FamilyMember[]>>;
 };
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [isSimplified, setIsSimplified] = useState(false);
+  const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>(initialFamilyMembers);
 
   return (
-    <AppContext.Provider value={{ isSimplified, setIsSimplified }}>
+    <AppContext.Provider value={{ isSimplified, setIsSimplified, familyMembers, setFamilyMembers }}>
       {children}
     </AppContext.Provider>
   );

@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { familyMembers, FamilyMember } from '@/lib/data';
+import type { FamilyMember } from '@/lib/data';
 import { User, Plus, Trash2 } from 'lucide-react';
 import {
   Dialog,
@@ -20,28 +20,27 @@ import { useAppContext } from '@/contexts/app-context';
 import { cn } from '@/lib/utils';
 
 export default function MembersPage() {
-  const [members, setMembers] = useState<FamilyMember[]>(familyMembers);
+  const { familyMembers, setFamilyMembers, isSimplified } = useAppContext();
   const [newMemberName, setNewMemberName] = useState('');
   const [newMemberRelationship, setNewMemberRelationship] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const { isSimplified } = useAppContext();
 
   const handleAddMember = () => {
     if (newMemberName.trim() === '' || newMemberRelationship.trim() === '') return;
     const newMember: FamilyMember = {
-      id: `m${members.length + 1}`,
+      id: `m${familyMembers.length + 1}`,
       name: newMemberName,
       relationship: newMemberRelationship,
       avatar: 'https://placehold.co/40x40.png',
     };
-    setMembers([...members, newMember]);
+    setFamilyMembers([...familyMembers, newMember]);
     setNewMemberName('');
     setNewMemberRelationship('');
     setIsDialogOpen(false);
   };
 
   const handleDeleteMember = (id: string) => {
-    setMembers(members.filter((member) => member.id !== id));
+    setFamilyMembers(familyMembers.filter((member) => member.id !== id));
   };
 
   return (
@@ -100,7 +99,7 @@ export default function MembersPage() {
       <Card>
         <CardContent className="p-0">
           <ul className="divide-y">
-            {members.map((member) => (
+            {familyMembers.map((member) => (
               <li key={member.id} className="flex items-center justify-between p-4 hover:bg-muted/50">
                 <div className="flex items-center gap-4">
                   <Avatar className={cn('h-12 w-12', isSimplified && 'h-16 w-16')}>

@@ -8,7 +8,6 @@ import { useAppContext } from '@/contexts/app-context';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { familyMembers } from '@/lib/data';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
@@ -40,7 +39,7 @@ export default function AnalysisPage() {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const { isSimplified } = useAppContext();
+    const { isSimplified, familyMembers } = useAppContext();
     const { toast } = useToast();
 
     useEffect(() => {
@@ -73,7 +72,7 @@ export default function AnalysisPage() {
         setIsLoading(true);
         setError(null);
         setAnalysis(null);
-        const result = await getFamilyPatternAnalysis(selectedMemberId);
+        const result = await getFamilyPatternAnalysis(selectedMemberId, familyMembers);
         if (result.error) {
             setError(result.error);
         } else if (result.summary) {
