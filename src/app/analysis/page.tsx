@@ -2,23 +2,27 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, Sparkles } from 'lucide-react';
+import { Loader2, Sparkles, User } from 'lucide-react';
 import { getFamilyPatternAnalysis } from '@/lib/actions';
 import { useAppContext } from '@/contexts/app-context';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { familyMembers } from '@/lib/data';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 export default function AnalysisPage() {
     const [analysis, setAnalysis] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [selectedMemberId, setSelectedMemberId] = useState<string>('all');
     const { isSimplified } = useAppContext();
 
     const handleAnalyze = async () => {
         setIsLoading(true);
         setError(null);
         setAnalysis(null);
-        const result = await getFamilyPatternAnalysis();
+        const result = await getFamilyPatternAnalysis(selectedMemberId);
         if (result.error) {
             setError(result.error);
         } else if (result.summary) {
@@ -40,16 +44,49 @@ export default function AnalysisPage() {
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                    <Button onClick={handleAnalyze} disabled={isLoading} size="lg" className={cn(isSimplified && 'h-14 text-lg')}>
-                        {isLoading ? (
-                            <>
-                                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                                Analyzing...
-                            </>
-                        ) : (
-                            'Analyze Family Patterns'
-                        )}
-                    </Button>
+                    <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                        <Select value={selectedMemberId} onValueChange={setSelectedMemberId}>
+                            <SelectTrigger className={cn("w-full sm:w-[280px]", isSimplified && 'h-14 text-lg')}>
+                                <SelectValue placeholder="Select a family member" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">
+                                    <div className="flex items-center gap-2">
+                                        <div className="flex -space-x-2 overflow-hidden">
+                                            {familyMembers.slice(0,4).map(member => (
+                                                <Avatar key={member.id} className='h-6 w-6 border-2 border-background'>
+                                                     <AvatarImage src={member.avatar} alt={member.name} />
+                                                     <AvatarFallback><User /></AvatarFallback>
+                                                </Avatar>
+                                            ))}
+                                        </div>
+                                        <span>All Family Members</span>
+                                    </div>
+                                </SelectItem>
+                                {familyMembers.map((member) => (
+                                    <SelectItem key={member.id} value={member.id}>
+                                       <div className="flex items-center gap-2">
+                                            <Avatar className='h-6 w-6'>
+                                                <AvatarImage src={member.avatar} alt={member.name} data-ai-hint={member.name === 'You' ? 'woman portrait' : member.name === 'Alex' ? 'man portrait' : member.name === 'Mia' ? 'girl portrait' : 'boy portrait'}/>
+                                                <AvatarFallback><User /></AvatarFallback>
+                                            </Avatar>
+                                            <span>{member.name}</span>
+                                       </div>
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        <Button onClick={handleAnalyze} disabled={isLoading} size="lg" className={cn("w-full sm:w-auto", isSimplified && 'h-14 text-lg')}>
+                            {isLoading ? (
+                                <>
+                                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                                    Analyzing...
+                                </>
+                            ) : (
+                                'Analyze Patterns'
+                            )}
+                        </Button>
+                    </div>
 
                     {error && <p className="text-destructive">{error}</p>}
                     
@@ -77,7 +114,7 @@ export default function AnalysisPage() {
                                 height={300}
                                 className="mx-auto rounded-lg"
                              />
-                             <p className={cn("mt-4", isSimplified && 'text-lg')}>Click the button to generate your family's wellness report.</p>
+                             <p className={cn("mt-4", isSimplified && 'text-lg')}>Select a member and click the button to generate a wellness report.</p>
                          </div>
                     )}
                 </CardContent>

@@ -12,6 +12,7 @@ import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const AnalyzeFamilyPatternsInputSchema = z.object({
+  memberToAnalyze: z.string().describe("The name of the family member to analyze, or 'the entire family'."),
   moodEntries: z
     .array(
       z.object({
@@ -35,7 +36,7 @@ const AnalyzeFamilyPatternsInputSchema = z.object({
 export type AnalyzeFamilyPatternsInput = z.infer<typeof AnalyzeFamilyPatternsInputSchema>;
 
 const AnalyzeFamilyPatternsOutputSchema = z.object({
-  summary: z.string().describe('A summary of potential stress factors and patterns identified within the family unit.'),
+  summary: z.string().describe('A summary of potential stress factors and patterns identified for the specified family member or the entire family unit.'),
 });
 export type AnalyzeFamilyPatternsOutput = z.infer<typeof AnalyzeFamilyPatternsOutputSchema>;
 
@@ -47,19 +48,27 @@ const prompt = ai.definePrompt({
   name: 'analyzeFamilyPatternsPrompt',
   input: {schema: AnalyzeFamilyPatternsInputSchema},
   output: {schema: AnalyzeFamilyPatternsOutputSchema},
-  prompt: `You are an AI assistant designed to analyze family mood entries and shared calendar data to identify potential stress factors and patterns within the family unit.
+  prompt: `You are an AI assistant designed to analyze family mood entries and shared calendar data to identify potential stress factors and patterns. You are analyzing data for {{{memberToAnalyze}}}.
 
+  {{#if moodEntries}}
   Analyze the following mood entries:
   {{#each moodEntries}}
   - Member ID: {{{memberId}}}, Date: {{{date}}}, Mood: {{{mood}}}, Notes: {{{notes}}}
   {{/each}}
+  {{else}}
+  There are no mood entries to analyze for the selected period.
+  {{/if}}
 
+  {{#if calendarEvents}}
   Analyze the following calendar events:
   {{#each calendarEvents}}
   - Member ID: {{{memberId}}}, Date: {{{date}}}, Event: {{{event}}}
   {{/each}}
+  {{else}}
+  There are no calendar events to analyze for the selected period.
+  {{/if}}
 
-  Provide a summary of potential stress factors and patterns identified within the family unit. Be concise and focus on actionable insights.
+  Provide a summary of potential stress factors and patterns identified. If the analysis is for one person, focus on them. If it's for the whole family, provide a holistic view. Be concise and focus on actionable insights.
   `, 
 });
 
