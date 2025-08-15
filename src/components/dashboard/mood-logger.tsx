@@ -4,10 +4,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import type { Mood } from '@/lib/data';
+import type { Mood, MoodEntry } from '@/lib/data';
 import { Frown, Annoyed, Smile, Meh, HeartPulse } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAppContext } from '@/contexts/app-context';
+import { format } from 'date-fns';
 
 const moodOptions: { mood: Mood; label: string; icon: React.ElementType }[] = [
   { mood: 'happy', label: 'Happy', icon: Smile },
@@ -21,7 +22,7 @@ export function MoodLogger() {
   const [selectedMood, setSelectedMood] = useState<Mood | null>(null);
   const [notes, setNotes] = useState('');
   const { toast } = useToast();
-  const { isSimplified } = useAppContext();
+  const { isSimplified, setMoodEntries } = useAppContext();
 
   const handleSubmit = () => {
     if (!selectedMood) {
@@ -32,7 +33,16 @@ export function MoodLogger() {
       });
       return;
     }
-    console.log({ mood: selectedMood, notes });
+    const newMoodEntry: MoodEntry = {
+      id: `m${Date.now()}`,
+      memberId: '1', // Always for the current user
+      mood: selectedMood,
+      notes: notes,
+      date: new Date().toISOString().split('T')[0],
+    };
+
+    setMoodEntries(prevEntries => [...prevEntries, newMoodEntry]);
+
     toast({
       title: 'Mood logged!',
       description: `You've logged your mood as ${selectedMood}.`,

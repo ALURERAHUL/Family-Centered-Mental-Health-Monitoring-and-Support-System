@@ -52,7 +52,7 @@ export function RecentActivity() {
                                     </div>
                                     {entry.notes && <p className={cn("text-muted-foreground text-sm mt-1 p-2 bg-muted/50 rounded-md", isSimplified && "text-base")}>"{entry.notes}"</p>}
                                 </div>
-                                <span className={cn("text-xs text-muted-foreground", isSimplified && "text-sm")}>{new Date(entry.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                                <span className={cn("text-xs text-muted-foreground", isSimplified && "text-sm")}>{new Date(entry.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
                             </div>
                         )
                     })}

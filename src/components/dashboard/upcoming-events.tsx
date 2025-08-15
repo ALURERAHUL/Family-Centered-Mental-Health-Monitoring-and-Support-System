@@ -4,6 +4,7 @@ import { Calendar, User } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAppContext } from '@/contexts/app-context';
 import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
 
 export function UpcomingEvents() {
     const { isSimplified, familyMembers, calendarEvents } = useAppContext();
@@ -30,8 +31,8 @@ export function UpcomingEvents() {
                     {upcoming.map(event => (
                         <li key={event.id} className="flex items-start gap-4">
                             <div className="flex flex-col items-center">
-                                <span className={cn("font-bold text-primary", isSimplified && "text-xl")}>{new Date(event.date + 'T00:00:00').toLocaleDateString('en-US', { day: '2-digit' })}</span>
-                                <span className={cn("text-sm text-muted-foreground", isSimplified && "text-base")}>{new Date(event.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short' })}</span>
+                                <span className={cn("font-bold text-primary", isSimplified && "text-xl")}>{format(new Date(event.date + 'T00:00:00'), 'dd')}</span>
+                                <span className={cn("text-sm text-muted-foreground", isSimplified && "text-base")}>{format(new Date(event.date + 'T00:00:00'), 'MMM')}</span>
                             </div>
                             <div className="flex-1">
                                 <p className={cn("font-semibold", isSimplified && "text-xl")}>{event.title}</p>

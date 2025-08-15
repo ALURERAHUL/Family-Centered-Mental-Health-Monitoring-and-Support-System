@@ -3,13 +3,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { useAppContext } from '@/contexts/app-context';
-import { familyMembers } from '@/lib/data';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { User, Eye } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export default function SettingsPage() {
-  const { isSimplified, setIsSimplified } = useAppContext();
+  const { isSimplified, setIsSimplified, familyMembers } = useAppContext();
 
   return (
     <div className="space-y-8 max-w-2xl mx-auto">
