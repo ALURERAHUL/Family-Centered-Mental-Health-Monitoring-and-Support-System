@@ -1,6 +1,7 @@
 'use server';
 
 import { analyzeFamilyPatterns, AnalyzeFamilyPatternsInput } from '@/ai/flows/analyze-family-patterns';
+import { analyzePhotoMood, AnalyzePhotoMoodInput, AnalyzePhotoMoodOutput } from '@/ai/flows/analyze-photo-mood';
 import { moodEntries, calendarEvents, familyMembers } from './data';
 
 export async function getFamilyPatternAnalysis(memberId: string) {
@@ -41,5 +42,17 @@ export async function getFamilyPatternAnalysis(memberId: string) {
     } catch (error) {
         console.error("Error analyzing family patterns:", error);
         return { error: 'Failed to analyze patterns. Please try again later.' };
+    }
+}
+
+
+export async function getPhotoMoodAnalysis(photoDataUri: string): Promise<{error: string} | AnalyzePhotoMoodOutput> {
+    try {
+        const input: AnalyzePhotoMoodInput = { photoDataUri };
+        const result = await analyzePhotoMood(input);
+        return result;
+    } catch (error) {
+        console.error("Error analyzing photo mood:", error);
+        return { error: 'Failed to analyze photo. Please try again.' };
     }
 }
