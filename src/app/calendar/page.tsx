@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { Calendar } from '@/components/ui/calendar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { calendarEvents, familyMembers } from '@/lib/data';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { User } from 'lucide-react';
 import { useAppContext } from '@/contexts/app-context';
@@ -12,7 +11,7 @@ import { format } from 'date-fns';
 
 export default function CalendarPage() {
     const [date, setDate] = useState<Date | undefined>(new Date());
-    const { isSimplified } = useAppContext();
+    const { isSimplified, familyMembers, calendarEvents } = useAppContext();
     const getMember = (id: string) => familyMembers.find(m => m.id === id);
 
     const eventsForSelectedDay = date ? calendarEvents.filter(

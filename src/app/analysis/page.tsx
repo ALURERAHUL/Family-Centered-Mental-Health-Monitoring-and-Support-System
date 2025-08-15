@@ -39,7 +39,7 @@ export default function AnalysisPage() {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const { isSimplified, familyMembers } = useAppContext();
+    const { isSimplified, familyMembers, moodEntries, calendarEvents } = useAppContext();
     const { toast } = useToast();
 
     useEffect(() => {
@@ -72,7 +72,7 @@ export default function AnalysisPage() {
         setIsLoading(true);
         setError(null);
         setAnalysis(null);
-        const result = await getFamilyPatternAnalysis(selectedMemberId, familyMembers);
+        const result = await getFamilyPatternAnalysis(selectedMemberId, familyMembers, moodEntries, calendarEvents);
         if (result.error) {
             setError(result.error);
         } else if (result.summary) {

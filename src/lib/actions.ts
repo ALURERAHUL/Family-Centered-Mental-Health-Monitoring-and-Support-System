@@ -2,9 +2,9 @@
 
 import { analyzeFamilyPatterns, AnalyzeFamilyPatternsInput } from '@/ai/flows/analyze-family-patterns';
 import { analyzePhotoMood, AnalyzePhotoMoodInput, AnalyzePhotoMoodOutput } from '@/ai/flows/analyze-photo-mood';
-import { moodEntries, calendarEvents, type FamilyMember } from './data';
+import { type MoodEntry, type CalendarEvent, type FamilyMember } from './data';
 
-export async function getFamilyPatternAnalysis(memberId: string, familyMembers: FamilyMember[]) {
+export async function getFamilyPatternAnalysis(memberId: string, familyMembers: FamilyMember[], moodEntries: MoodEntry[], calendarEvents: CalendarEvent[]) {
     try {
         let finalMoodEntries = moodEntries;
         let finalCalendarEvents = calendarEvents;

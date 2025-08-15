@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { forumPosts, familyMembers, ForumPost, moodEntries, Mood } from '@/lib/data';
+import { forumPosts, ForumPost, Mood } from '@/lib/data';
 import { User, Send, Frown, Annoyed, Smile, Meh, HeartPulse, MessageSquare, Star } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { useAppContext } from '@/contexts/app-context';
@@ -26,7 +26,7 @@ const moodIcons: Record<Mood, React.ElementType> = {
 export default function ForumPage() {
     const [posts, setPosts] = useState<ForumPost[]>(forumPosts);
     const [newMessage, setNewMessage] = useState('');
-    const { isSimplified } = useAppContext();
+    const { isSimplified, familyMembers, moodEntries } = useAppContext();
     const scrollAreaRef = useRef<HTMLDivElement>(null);
 
     const getMember = (id: string) => familyMembers.find(m => m.id === id);

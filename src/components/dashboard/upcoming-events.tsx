@@ -1,13 +1,12 @@
 'use client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { calendarEvents, familyMembers } from '@/lib/data';
 import { Calendar, User } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAppContext } from '@/contexts/app-context';
 import { cn } from '@/lib/utils';
 
 export function UpcomingEvents() {
-    const { isSimplified } = useAppContext();
+    const { isSimplified, familyMembers, calendarEvents } = useAppContext();
     const today = new Date();
     today.setHours(0,0,0,0);
     const upcoming = calendarEvents

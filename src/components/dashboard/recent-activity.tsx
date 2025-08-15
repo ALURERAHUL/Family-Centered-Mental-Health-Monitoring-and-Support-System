@@ -1,6 +1,5 @@
 'use client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { moodEntries, familyMembers } from '@/lib/data';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Frown, Annoyed, Smile, Meh, HeartPulse, User, MessageSquare } from 'lucide-react';
 import { useAppContext } from '@/contexts/app-context';
@@ -18,7 +17,7 @@ const moodIcons: Record<Mood, React.ElementType> = {
 };
 
 export function RecentActivity() {
-    const { isSimplified } = useAppContext();
+    const { isSimplified, familyMembers, moodEntries } = useAppContext();
     const recentMoods = moodEntries.slice(-5).reverse();
     const getMember = (id: string) => familyMembers.find(m => m.id === id);
 
