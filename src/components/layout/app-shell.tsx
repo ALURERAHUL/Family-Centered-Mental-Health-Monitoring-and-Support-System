@@ -22,6 +22,7 @@ import {
   Sparkles,
   Settings,
   HeartPulse,
+  Users,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAppContext } from '@/contexts/app-context';
@@ -31,6 +32,7 @@ const navItems = [
   { href: '/', label: 'Dashboard', icon: Home },
   { href: '/calendar', label: 'Calendar', icon: Calendar },
   { href: '/forum', label: 'Forum', icon: MessageSquare },
+  { href: '/members', label: 'Members', icon: Users },
   { href: '/analysis', label: 'Analysis', icon: Sparkles },
   { href: '/settings', label: 'Settings', icon: Settings },
 ];

@@ -6,11 +6,22 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { forumPosts, familyMembers, ForumPost } from '@/lib/data';
-import { User, Send } from 'lucide-react';
+import { forumPosts, familyMembers, ForumPost, moodEntries, Mood } from '@/lib/data';
+import { User, Send, Frown, Annoyed, Smile, Meh, HeartPulse, MessageSquare, Star } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { useAppContext } from '@/contexts/app-context';
 import { cn } from '@/lib/utils';
+import { Badge } from '@/components/ui/badge';
+
+const moodIcons: Record<Mood, React.ElementType> = {
+    happy: Smile,
+    calm: HeartPulse,
+    meh: Meh,
+    sad: Frown,
+    angry: Annoyed,
+    anxious: Annoyed,
+    stressed: Annoyed,
+};
 
 export default function ForumPage() {
     const [posts, setPosts] = useState<ForumPost[]>(forumPosts);
@@ -19,6 +30,12 @@ export default function ForumPage() {
     const scrollAreaRef = useRef<HTMLDivElement>(null);
 
     const getMember = (id: string) => familyMembers.find(m => m.id === id);
+    
+    const getLatestMood = (memberId: string) => {
+        return moodEntries
+            .filter(entry => entry.memberId === memberId)
+            .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
+    };
 
     const handleSendMessage = () => {
         if (newMessage.trim() === '') return;
@@ -51,6 +68,8 @@ export default function ForumPage() {
                     <div className="space-y-6">
                         {posts.map(post => {
                             const member = getMember(post.memberId);
+                            const latestMood = getLatestMood(post.memberId);
+                            const MoodIcon = latestMood ? moodIcons[latestMood.mood] : null;
                             return (
                                 <div key={post.id} className="flex items-start gap-4">
                                     <Avatar className={cn('h-10 w-10', isSimplified && 'h-12 w-12')}>
@@ -58,8 +77,14 @@ export default function ForumPage() {
                                         <AvatarFallback><User /></AvatarFallback>
                                     </Avatar>
                                     <div>
-                                        <div className="flex items-baseline gap-2">
+                                        <div className="flex items-center gap-2 flex-wrap">
                                             <p className={cn('font-bold', isSimplified && 'text-xl')}>{member?.name}</p>
+                                            {latestMood && MoodIcon && (
+                                                <Badge variant="outline" className={cn(isSimplified && "text-sm px-3 py-1")}>
+                                                    <MoodIcon className="h-4 w-4 mr-1.5"/>
+                                                     {latestMood.mood}
+                                                </Badge>
+                                            )}
                                             <p className={cn('text-xs text-muted-foreground', isSimplified && 'text-sm')}>{formatDistanceToNow(new Date(post.timestamp), { addSuffix: true })}</p>
                                         </div>
                                         <p className={cn('mt-1 text-foreground/90', isSimplified && 'text-lg')}>{post.content}</p>
