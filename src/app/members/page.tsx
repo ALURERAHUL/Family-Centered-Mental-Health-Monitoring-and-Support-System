@@ -1,3 +1,4 @@
+
 'use client';
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -58,9 +59,9 @@ export default function MembersPage() {
           </DialogTrigger>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
-              <DialogTitle className={cn(isSimplified && 'text-2xl')}>Add New Member</DialogTitle>
+              <DialogTitle className={cn(isSimplified && 'text-2xl')}>Add New Family Member</DialogTitle>
               <DialogDescription>
-                Enter the details of the new family member.
+                Enter the details for the new family member and click save.
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
