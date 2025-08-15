@@ -1,5 +1,6 @@
-import {withGenkit} from '@genkit-ai/next';
+const { withGenkit } = require('@genkit-ai/next');
 
+/** @type {import('next').NextConfig} */
 const nextConfig = {
   typescript: {
     // !! WARN !!
@@ -8,11 +9,11 @@ const nextConfig = {
     // !! WARN !!
     ignoreBuildErrors: true,
   },
-  webpack: (config: any) => {
+  webpack: (config) => {
     // Required for wav package.
     config.externals.push('node-fetch');
     return config;
   },
 };
 
-export default withGenkit(nextConfig);
+module.exports = withGenkit(nextConfig);
