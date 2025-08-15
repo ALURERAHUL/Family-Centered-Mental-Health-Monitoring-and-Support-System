@@ -2,7 +2,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, Sparkles, User, Camera, Upload } from 'lucide-react';
+import { Loader2, Sparkles, User, Camera, Upload, History } from 'lucide-react';
 import { getFamilyPatternAnalysis, getPhotoMoodAnalysis } from '@/lib/actions';
 import { useAppContext } from '@/contexts/app-context';
 import { cn } from '@/lib/utils';
@@ -13,6 +13,10 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import type { AnalyzePhotoMoodOutput } from '@/ai/flows/analyze-photo-mood';
+import { MoodHistoryChart } from '@/components/analysis/mood-history-chart';
+import { ScrollArea } from '@/components/ui/scroll-area';
+
+type PhotoAnalysisHistoryEntry = AnalyzePhotoMoodOutput & { image: string };
 
 export default function AnalysisPage() {
     const [analysis, setAnalysis] = useState<string | null>(null);
@@ -21,6 +25,7 @@ export default function AnalysisPage() {
     const [selectedMemberId, setSelectedMemberId] = useState<string>('all');
 
     const [photoAnalysis, setPhotoAnalysis] = useState<AnalyzePhotoMoodOutput | null>(null);
+    const [photoAnalysisHistory, setPhotoAnalysisHistory] = useState<PhotoAnalysisHistoryEntry[]>([]);
     const [isPhotoLoading, setIsPhotoLoading] = useState(false);
     const [photoError, setPhotoError] = useState<string | null>(null);
     const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
@@ -83,7 +88,9 @@ export default function AnalysisPage() {
         if (result.error) {
             setPhotoError(result.error);
         } else {
+            const newAnalysis: PhotoAnalysisHistoryEntry = { ...result, image: photoDataUri };
             setPhotoAnalysis(result);
+            setPhotoAnalysisHistory(prev => [newAnalysis, ...prev]);
         }
         setIsPhotoLoading(false);
     }
@@ -297,9 +304,12 @@ export default function AnalysisPage() {
                     
                     {photoError && <p className="text-destructive text-center">{photoError}</p>}
 
-                    {photoAnalysis && (
+                    {photoAnalysis && !isPhotoLoading && (
                         <Card className="text-left bg-background">
-                            <CardContent className="pt-6 grid gap-4">
+                            <CardHeader>
+                                <CardTitle>Latest Analysis</CardTitle>
+                            </CardHeader>
+                            <CardContent className="pt-0 grid gap-4">
                                 <div>
                                     <h3 className="font-bold text-lg">Detected Mood:</h3>
                                     <p className="capitalize">{photoAnalysis.mood}</p>
@@ -317,6 +327,53 @@ export default function AnalysisPage() {
                     )}
                 </CardContent>
             </Card>
+
+            {photoAnalysisHistory.length > 0 && (
+                <Card>
+                    <CardHeader>
+                        <div className="mx-auto bg-primary/10 p-4 rounded-full w-fit">
+                            <History className="h-10 w-10 text-primary" />
+                        </div>
+                        <CardTitle className={cn("text-3xl font-bold mt-4 text-center", isSimplified && 'text-4xl')}>Mood Analysis History</CardTitle>
+                        <CardDescription className={cn("text-lg text-muted-foreground text-center", isSimplified && 'text-xl')}>
+                            Review past analyses and compare mood trends over time.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-8">
+                        <div>
+                           <h3 className="text-xl font-bold text-center mb-4">Mood Frequency</h3>
+                           <MoodHistoryChart history={photoAnalysisHistory} />
+                        </div>
+                       
+                        <ScrollArea className="h-[400px] w-full rounded-md border p-4">
+                            <div className="space-y-6">
+                            {photoAnalysisHistory.map((entry, index) => (
+                                <Card key={index} className="flex flex-col md:flex-row gap-4 p-4">
+                                    <Image src={entry.image} alt={`Analyzed photo ${index+1}`} width={150} height={150} className="rounded-md object-cover aspect-square" />
+                                    <div className="flex-1">
+                                        <div>
+                                            <h3 className="font-bold text-lg">Detected Mood:</h3>
+                                            <p className="capitalize">{entry.mood}</p>
+                                        </div>
+                                        <div className="mt-2">
+                                            <h3 className="font-bold text-lg">Analysis:</h3>
+                                            <p className="whitespace-pre-wrap text-sm">{entry.analysis}</p>
+                                        </div>
+                                        <div className="mt-2">
+                                            <h3 className="font-bold text-lg">Suggestion:</h3>
+                                            <p className="whitespace-pre-wrap text-sm">{entry.solution}</p>
+                                        </div>
+                                    </div>
+                                </Card>
+                            ))}
+                            </div>
+                        </ScrollArea>
+                    </CardContent>
+                </Card>
+            )}
+
         </div>
     );
 }
+
+    
