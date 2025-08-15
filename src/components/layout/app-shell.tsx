@@ -32,6 +32,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { useAppContext } from '@/contexts/app-context';
 import { cn } from '@/lib/utils';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+
 
 const navItems = [
   { href: '/', label: 'Dashboard', icon: Home },
