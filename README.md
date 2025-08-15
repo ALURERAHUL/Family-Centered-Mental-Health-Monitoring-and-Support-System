@@ -1,5 +1,3 @@
-# Firebase Studio
+# Family-Centered Mental Health Monitoring and Support System
 
-This is a NextJS starter in Firebase Studio.
-
-To get started, take a look at src/app/page.tsx.
+It simulates a family mental health support platform where family members can collaboratively monitor and support each other's mental wellness through shared behavioral insights, mood tracking, and communication pattern analysis. When the system detects changes in family member behavior, communication patterns, or mood indicators, it provides family-appropriate intervention strategies and connects them with professional resources. The system should handle multi-user family accounts with appropriate privacy controls, age-appropriate interfaces for different family members, and family communication facilitation tools.
