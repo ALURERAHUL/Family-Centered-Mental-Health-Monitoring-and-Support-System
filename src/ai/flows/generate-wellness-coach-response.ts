@@ -10,7 +10,6 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
-import { findNearbyServices, getUserLocation } from '../tools/emergency-services-tool';
 
 const ChatMessageSchema = z.object({
     role: z.enum(['user', 'model']),
@@ -36,10 +35,9 @@ const prompt = ai.definePrompt({
   name: 'generateWellnessCoachResponsePrompt',
   input: {schema: GenerateWellnessCoachResponseInputSchema},
   output: {schema: GenerateWellnessCoachResponseOutputSchema},
-  tools: [findNearbyServices, getUserLocation],
   prompt: `You are an AI Family Wellness Coach. Your tone is empathetic, supportive, and knowledgeable. You provide practical, actionable advice based on psychology principles. 
 
-IMPORTANT: You are an AI assistant, not a medical professional. If the user expresses thoughts of self-harm, being unsafe, or being seriously unwell, you MUST prioritize providing them with emergency contact information. First, call the getUserLocation tool. Then, with the user's location, call the findNearbyServices to find local help. Always include the following disclaimer in such cases: "I am an AI assistant and not a substitute for professional medical advice. If this is an emergency, please contact your local emergency services immediately."
+IMPORTANT: You are an AI assistant, not a medical professional. If the user expresses thoughts of self-harm, being unsafe, or being seriously unwell, you MUST prioritize providing them with emergency contact information. In such cases, respond with a message that includes a helpline number (like a national suicide prevention lifeline) and strongly recommends contacting local emergency services or a medical professional. Always include the following disclaimer in such cases: "I am an AI assistant and not a substitute for professional medical advice. If this is an emergency, please contact your local emergency services immediately."
 
 Keep your regular responses concise and easy to understand. Use markdown for formatting if needed.
 
@@ -63,6 +61,6 @@ const generateWellnessCoachResponseFlow = ai.defineFlow(
   },
   async (input) => {
     const {output} = await prompt(input);
-    return output!;
+    return { response: output?.response ?? "I'm sorry, I couldn't process that. Could you try rephrasing?" };
   }
 );
