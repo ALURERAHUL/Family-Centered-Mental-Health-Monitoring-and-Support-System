@@ -15,8 +15,9 @@ import { useToast } from '@/hooks/use-toast';
 import type { AnalyzePhotoMoodOutput } from '@/ai/flows/analyze-photo-mood';
 import { MoodHistoryChart } from '@/components/analysis/mood-history-chart';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Label } from '@/components/ui/label';
 
-type PhotoAnalysisHistoryEntry = AnalyzePhotoMoodOutput & { image: string };
+type PhotoAnalysisHistoryEntry = AnalyzePhotoMoodOutput & { image: string; memberId: string; };
 
 export default function AnalysisPage() {
     const [analysis, setAnalysis] = useState<string | null>(null);
@@ -31,6 +32,9 @@ export default function AnalysisPage() {
     const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
     const [dragOver, setDragOver] = useState(false);
     const [uploadedImage, setUploadedImage] = useState<string | null>(null);
+    const [selectedPhotoMemberId, setSelectedPhotoMemberId] = useState<string>('1');
+    const [selectedHistoryMemberId, setSelectedHistoryMemberId] = useState<string>('all');
+
 
     const videoRef = useRef<HTMLVideoElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -82,17 +86,19 @@ export default function AnalysisPage() {
         setIsPhotoLoading(true);
         setPhotoError(null);
         setPhotoAnalysis(null);
+        setUploadedImage(null);
 
         const result = await getPhotoMoodAnalysis(photoDataUri);
 
         if (result.error) {
             setPhotoError(result.error);
         } else {
-            const newAnalysis: PhotoAnalysisHistoryEntry = { ...result, image: photoDataUri };
+            const newAnalysis: PhotoAnalysisHistoryEntry = { ...result, image: photoDataUri, memberId: selectedPhotoMemberId };
             setPhotoAnalysis(result);
             setPhotoAnalysisHistory(prev => [newAnalysis, ...prev]);
         }
         setIsPhotoLoading(false);
+        setUploadedImage(photoDataUri);
     }
 
     const handleTakePhotoAndAnalyze = async () => {
@@ -106,7 +112,6 @@ export default function AnalysisPage() {
         if (context) {
             context.drawImage(video, 0, 0, canvas.width, canvas.height);
             const photoDataUri = canvas.toDataURL('image/jpeg');
-            setUploadedImage(photoDataUri); // Show the captured photo
             await analyzePhoto(photoDataUri);
         }
     };
@@ -146,12 +151,17 @@ export default function AnalysisPage() {
         reader.onload = async (loadEvent) => {
             const photoDataUri = loadEvent.target?.result as string;
             if(photoDataUri){
-                setUploadedImage(photoDataUri); // Show the uploaded photo
                 await analyzePhoto(photoDataUri);
             }
         };
         reader.readAsDataURL(file);
     };
+
+    const filteredHistory = photoAnalysisHistory.filter(entry => 
+        selectedHistoryMemberId === 'all' || entry.memberId === selectedHistoryMemberId
+    );
+    const getMember = (id: string) => familyMembers.find(m => m.id === id);
+
 
     return (
         <div className="space-y-8">
@@ -253,6 +263,28 @@ export default function AnalysisPage() {
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
+                    <div className="space-y-4">
+                        <Label htmlFor="photo-member" className={cn(isSimplified && 'text-lg')}>Select member for analysis:</Label>
+                        <Select value={selectedPhotoMemberId} onValueChange={setSelectedPhotoMemberId}>
+                            <SelectTrigger id="photo-member" className={cn("w-full sm:w-[280px]", isSimplified && 'h-14 text-lg')}>
+                                <SelectValue placeholder="Select a family member" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {familyMembers.map((member) => (
+                                    <SelectItem key={member.id} value={member.id}>
+                                       <div className="flex items-center gap-2">
+                                            <Avatar className='h-6 w-6'>
+                                                <AvatarImage src={member.avatar} alt={member.name} data-ai-hint={member.name === 'You' ? 'woman portrait' : member.name === 'Alex' ? 'man portrait' : member.name === 'Mia' ? 'girl portrait' : 'boy portrait'}/>
+                                                <AvatarFallback><User /></AvatarFallback>
+                                            </Avatar>
+                                            <span>{member.name}</span>
+                                       </div>
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+
                     <div className="grid md:grid-cols-2 gap-6 items-start">
                         <div className="space-y-4">
                             <CardTitle className="text-xl text-center">Option 1: Use Camera</CardTitle>
@@ -283,7 +315,7 @@ export default function AnalysisPage() {
                                 onClick={() => fileInputRef.current?.click()}
                             >
                                 <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" className="hidden" />
-                                {uploadedImage ? (
+                                {uploadedImage && !isPhotoLoading ? (
                                     <Image src={uploadedImage} alt="Uploaded preview" width={200} height={150} className="max-h-full w-auto rounded-md" />
                                 ) : (
                                     <div className='space-y-2'>
@@ -307,7 +339,7 @@ export default function AnalysisPage() {
                     {photoAnalysis && !isPhotoLoading && (
                         <Card className="text-left bg-background">
                             <CardHeader>
-                                <CardTitle>Latest Analysis</CardTitle>
+                                <CardTitle>Latest Analysis for {getMember(selectedPhotoMemberId)?.name}</CardTitle>
                             </CardHeader>
                             <CardContent className="pt-0 grid gap-4">
                                 <div>
@@ -340,33 +372,65 @@ export default function AnalysisPage() {
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-8">
+                         <div className="space-y-4">
+                            <Label htmlFor="history-member" className={cn(isSimplified && 'text-lg')}>Filter history by member:</Label>
+                            <Select value={selectedHistoryMemberId} onValueChange={setSelectedHistoryMemberId}>
+                                <SelectTrigger id="history-member" className={cn("w-full sm:w-[280px]", isSimplified && 'h-14 text-lg')}>
+                                    <SelectValue placeholder="Select a family member" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">All Family Members</SelectItem>
+                                    {familyMembers.map((member) => (
+                                        <SelectItem key={member.id} value={member.id}>
+                                        <div className="flex items-center gap-2">
+                                                <Avatar className='h-6 w-6'>
+                                                    <AvatarImage src={member.avatar} alt={member.name} />
+                                                    <AvatarFallback><User /></AvatarFallback>
+                                                </Avatar>
+                                                <span>{member.name}</span>
+                                        </div>
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
                         <div>
                            <h3 className="text-xl font-bold text-center mb-4">Mood Frequency</h3>
-                           <MoodHistoryChart history={photoAnalysisHistory} />
+                           <MoodHistoryChart history={filteredHistory} />
                         </div>
                        
                         <ScrollArea className="h-[400px] w-full rounded-md border p-4">
-                            <div className="space-y-6">
-                            {photoAnalysisHistory.map((entry, index) => (
-                                <Card key={index} className="flex flex-col md:flex-row gap-4 p-4">
-                                    <Image src={entry.image} alt={`Analyzed photo ${index+1}`} width={150} height={150} className="rounded-md object-cover aspect-square" />
-                                    <div className="flex-1">
-                                        <div>
-                                            <h3 className="font-bold text-lg">Detected Mood:</h3>
-                                            <p className="capitalize">{entry.mood}</p>
-                                        </div>
-                                        <div className="mt-2">
-                                            <h3 className="font-bold text-lg">Analysis:</h3>
-                                            <p className="whitespace-pre-wrap text-sm">{entry.analysis}</p>
-                                        </div>
-                                        <div className="mt-2">
-                                            <h3 className="font-bold text-lg">Suggestion:</h3>
-                                            <p className="whitespace-pre-wrap text-sm">{entry.solution}</p>
-                                        </div>
-                                    </div>
-                                </Card>
-                            ))}
-                            </div>
+                            {filteredHistory.length > 0 ? (
+                                <div className="space-y-6">
+                                {filteredHistory.map((entry, index) => {
+                                    const member = getMember(entry.memberId);
+                                    return (
+                                        <Card key={index} className="flex flex-col md:flex-row gap-4 p-4">
+                                            <Image src={entry.image} alt={`Analyzed photo ${index+1}`} width={150} height={150} className="rounded-md object-cover aspect-square" />
+                                            <div className="flex-1">
+                                                 <div>
+                                                    <h3 className="font-bold text-lg">Analysis for: {member?.name}</h3>
+                                                </div>
+                                                <div>
+                                                    <h3 className="font-bold text-lg">Detected Mood:</h3>
+                                                    <p className="capitalize">{entry.mood}</p>
+                                                </div>
+                                                <div className="mt-2">
+                                                    <h3 className="font-bold text-lg">Analysis:</h3>
+                                                    <p className="whitespace-pre-wrap text-sm">{entry.analysis}</p>
+                                                </div>
+                                                <div className="mt-2">
+                                                    <h3 className="font-bold text-lg">Suggestion:</h3>
+                                                    <p className="whitespace-pre-wrap text-sm">{entry.solution}</p>
+                                                </div>
+                                            </div>
+                                        </Card>
+                                    )
+                                })}
+                                </div>
+                            ) : (
+                                <p className="text-muted-foreground text-center py-8">No history for this member.</p>
+                            )}
                         </ScrollArea>
                     </CardContent>
                 </Card>
@@ -375,5 +439,3 @@ export default function AnalysisPage() {
         </div>
     );
 }
-
-    

@@ -2,10 +2,9 @@
 
 import * as React from 'react';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import type { AnalyzePhotoMoodOutput } from '@/ai/flows/analyze-photo-mood';
 
-type PhotoAnalysisHistoryEntry = AnalyzePhotoMoodOutput & { image: string };
+type PhotoAnalysisHistoryEntry = AnalyzePhotoMoodOutput & { image: string; memberId: string };
 
 interface MoodHistoryChartProps {
   history: PhotoAnalysisHistoryEntry[];
@@ -21,6 +20,14 @@ export function MoodHistoryChart({ history }: MoodHistoryChartProps) {
     mood,
     count,
   }));
+
+  if (history.length === 0) {
+    return (
+        <div className="h-[350px] w-full flex items-center justify-center text-muted-foreground">
+            <p>No mood data to display for the selected member.</p>
+        </div>
+    )
+  }
 
   return (
     <div className="h-[350px] w-full">
@@ -42,5 +49,3 @@ export function MoodHistoryChart({ history }: MoodHistoryChartProps) {
     </div>
   );
 }
-
-    
